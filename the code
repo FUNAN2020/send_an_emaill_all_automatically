@@ -1,0 +1,125 @@
+import smtplib
+from email.mime.text import MIMEText
+from email.header import Header
+from threading import Timer
+import requests
+from email.mime.image import MIMEImage
+from email.mime.multipart import MIMEMultipart
+from email.mime.application import MIMEApplication
+
+
+def SendEmail(fromAdd, toAdd):
+    msg = MIMEMultipart('related')
+    msg['To'] = toAdd
+    msg['From'] = fromAdd
+    print("------------请在下列选择发送邮件的格式：------------")
+    print("请先输入本次发送邮件的主题：")
+    subject = input()
+    msg['Subject'] = subject
+
+    print("请先选择发送邮件是否使用正文内容：是：1；否：0")
+    text_num = int(input())
+    if(text_num==1):
+        textApart = get_news("text.txt")
+        msg.attach(textApart)
+    else:
+        print("提醒：没有选择邮件中包含正文内容！")
+
+
+    print("请再选择邮件是否使用pdf附件：是：1；否：0")
+    pdf_num = int(input())
+    if(pdf_num==1):
+        pdfApart = get_pdf("test.pdf")
+        msg.attach(pdfApart)
+    else:
+        print("提醒：没有选择邮件中包含pdf附件！")
+
+    print("请再选择邮件是否单独使用图片附件：是：1；否：0")
+    image_num = int(input())
+    if(image_num==1):
+        imageApart = get_image("test.jpg")
+        msg.attach(imageApart)
+    else:
+        print("提醒：没有选择邮件中包含图片附件！")
+
+
+    print("请再选择邮件是否使用zip压缩附件：是：1；否：0")
+    zip_num = int(input())
+    if (zip_num==1):
+        zipApart = get_zip("test_zip.zip")
+        msg.attach(zipApart)
+    else:
+        print("提醒：没有选择邮件中包含压缩包附件！")
+
+    print("请再选择邮件是否使用抄送功能：是：1；否：0")
+    CC_num = int(input())
+    if (CC_num==1):
+        print("请再输入抄送邮箱：")
+        CC_mail = input()
+        msg['CC'] = CC_mail
+    else:
+        print("提醒：没有选择抄送功能！")
+
+
+    print("请再选择邮件是否使用秘密抄送功能：是：1；否：0")
+    BCC_num = int(input())
+    if (BCC_num==1):
+        print("请再输入秘密抄送邮箱：")
+        BCC_mail = input()
+        msg['BCC'] = BCC_mail
+    else:
+        print("提醒：没有选择秘密抄送功能！")
+
+    #链接QQ邮箱服务器
+    smtp = smtplib.SMTP('smtp.qq.com')
+    #登录邮箱
+    smtp.login(fromAdd,'发件邮箱的验证码')
+    try:
+        smtp.sendmail(fromAdd,toAdd,msg.as_string())
+    finally:
+        smtp.close
+
+"""
+get_news():得到发送邮件中的发送内容，存入MIMEText中
+"""
+def get_news(textfile_path):
+    f = open(textfile_path,"r")
+    contest = f.read()
+    textApart = MIMEText(contest)
+    f.close()
+    return textApart
+
+
+"""
+get_zip():得到发送邮件中的压缩文件zip附件
+"""
+def get_zip(zipfile_path):
+    #print(zipfile_path)
+    zipApart = MIMEApplication(open(zipfile_path, 'rb').read())
+    zipApart.add_header('Content-Disposition', 'attachment', filename=zipfile_path)
+    return zipApart
+
+"""
+get_pdf():得到发送邮件中的pdf文件附件
+"""
+def get_pdf(pdffile_path):
+    #print(pdffile_path)
+    pdfApart = MIMEApplication(open(pdffile_path, 'rb').read())
+    pdfApart.add_header('Content-Disposition', 'attachment', filename=pdffile_path)
+    return pdfApart
+
+
+"""
+get_image():得到发送邮件中的imag文件附件
+"""
+def get_image(imagefile_path):
+    #print(imagefile_path)
+    imageApart = MIMEImage(open(imagefile_path, 'rb').read(), imagefile_path.split('.')[-1])
+    imageApart.add_header('Content-Disposition', 'attachment', filename=imagefile_path)
+    return imageApart
+
+
+
+
+SendEmail("发送方邮箱","收件人邮箱")
+print("发送邮件正确！")
